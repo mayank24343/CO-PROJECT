@@ -114,7 +114,20 @@ def r_type(input):
 
 def s_type(input):
     #to convert s type instruction to binary
-    pass
+    funct3 = '010'           
+    opcode = '0100011'
+
+    i = input.replace(",", " ").replace("(", " ").replace(")"," ").split()
+
+    rs2 = register(i[1])
+    offset = i[2]
+    rs1 = register(i[3])
+    
+    imm = twoscomplement(int(offset), 12) 
+    if imm == 'syntax error':
+        return imm
+    
+    return imm[:7]  + rs2 + rs1 + funct3 + imm[7:] + opcode
 
 def i_type(input):
        ##to convert i type instruction to binary
@@ -149,8 +162,29 @@ def i_type(input):
 
 
 def b_type(input):
-    #to convert n type instruction to binary
-    pass
+    #to convert b type instruction to binary
+    opcode = '1100011'
+    i = input.replace(",", " ").split()
+    
+    inst = i[0]
+    rs1 = register(i[1])
+    rs2 = register(i[2])
+    label = i[3]
+    if inst == "beq":
+        funct3 = '000'
+    elif inst == "bne":
+        funct3 = '001'
+    elif inst=='blt':
+        funct3 = '100'
+
+    if label not in labels:
+        imm = twoscomplement((int(label)),12)
+    else:
+        imm = twoscomplement((labels[label] - curr) // 2, 12)
+
+    if imm == 'syntax error':
+        return imm
+    return imm[0] + imm[2:8] + rs2 + rs1 + funct3 + imm[8:12] + imm[1] + opcode
 
 def j_type(input):
     #to convert j type instruction to binary
