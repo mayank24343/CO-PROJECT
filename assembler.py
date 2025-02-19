@@ -14,7 +14,8 @@ def binary(num):
 
 def sext(num,n):
     if len(num) > n:
-        return "error"
+        print("chi thu")
+        return "syntax error"
     else:
         while len(num) < n:
             num = num[0]+num
@@ -129,8 +130,8 @@ def s_type(input):
     
     return imm[:7]  + rs2 + rs1 + funct3 + imm[7:] + opcode
 
-def i_type(input):
-       ##to convert i type instruction to binary
+def i_type(s):
+    #create a dictionary for register adresss in binary
     
     d = {
         'addi': {'funct3': '000', 'opcode': '0010011'},
@@ -160,9 +161,8 @@ def i_type(input):
     #forming an instruction in binary using the corresponing binary values from the dictionary as per the instruction semantics given in pdf 
     return(instruction)
 
-
 def b_type(input):
-    #to convert b type instruction to binary
+    #to convert n type instruction to binary
     opcode = '1100011'
     i = input.replace(",", " ").split()
     
@@ -197,8 +197,10 @@ def j_type(input):
         if dest in labels:
             imm = twoscomplement(labels[dest]-curr,20)
         else:
-            imm = twoscomplement(int(dest),20)
+            imm = twoscomplement(int(dest)-curr,20)
         
+        if imm == 'syntax error':
+            return imm
         return imm[-20]+imm[-11:-1]+imm[-12]+imm[-19:-11]+rd+opcode
 
 def bonus(input):
@@ -212,10 +214,10 @@ def decode(input):
         binary = r_type(input)
     except:
         try:
-            binary = s_type(input)
+            binary = i_type(input)
         except:
             try:
-                binary = i_type(input)
+                binary = s_type(input)
             except:
                 try:
                     binary = s_type(input)
@@ -229,9 +231,9 @@ def decode(input):
                             try:
                                 binary = bonus(input)
                             except:
-                                binary = "error : instruction does not match syntax for any instruction type\n"
+                                binary = "error : instruction does not match syntax for any instruction type"
     
-    return binary
+    return binary+'\n'
 
 def assembler(input_file, output_file):
     global curr
@@ -245,9 +247,8 @@ def assembler(input_file, output_file):
             addr+=4
 
         binarycode = []
-        print(lines[-1][-1])
-        if lines[-1][-1] not in ["beq zero,zero,0\n","beq zero,zero,0"]:
-            binarycode.append("syntax error\n")
+        if lines[-1][-1] not in ["beq zero,zero,0","beq zero,zero,0\n"]:
+            binarycode.append("syntax error a\n")
 
         for i in lines:
             curr = i[0]
@@ -270,6 +271,7 @@ def assembler(input_file, output_file):
             except:
                 binarycode.append("syntax error\n")
 
+    print(binarycode)
     #to write the generated binary to output file
     with open(output_file,'w') as f:
         if 'syntax error\n' in binarycode:
