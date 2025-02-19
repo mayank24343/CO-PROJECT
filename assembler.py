@@ -10,11 +10,11 @@ def binary(num):
         num = num//2
 
     b = b[::-1]
-    return b
+    return '0'+b
 
 def sext(num,n):
     if len(num) > n:
-        return "error"
+        return "syntax error"
     else:
         while len(num) < n:
             num = num[0]+num
@@ -90,19 +90,100 @@ def register(reg):
 
 def r_type(input):
     #to convert r type instruction to binary
-    pass
+    d = {
+    'add': {'f7': '0000000', 'f3': '000', 'opcode': '0110011'},
+    'sub': {'f7': '0100000', 'f3': '000', 'opcode': '0110011'},
+    'slt': {'f7': '0000000', 'f3': '010', 'opcode': '0110011'},
+    'srl': {'f7': '0000000', 'f3': '101', 'opcode': '0110011'},
+    'or': {'f7': '0000000', 'f3': '110', 'opcode': '0110011'},
+    'and': {'f7': '0000000', 'f3': '111', 'opcode': '0110011'}
+    }
+    # create a dictionary for required codes for the instruction 
+    l = input.split()
+    l2 = l[1].split(',')
+    # to convert string to usable values 
+    ins = l[0]
+    rd = l2[0]
+    rs1 = l2[1]
+    rs2 = l2[2]
+    # assigning the usable values to variables 
+
+    instruction = d[ins]['f7']+register(rs2)+register(rs1)+d[ins]['f3']+register(rd)+d[ins]['opcode']
+    #forming an instruction in binary using the corresponing binary values from the dictionary as per the instruction semantics given in pdf 
+    return instruction
 
 def s_type(input):
     #to convert s type instruction to binary
-    pass
+    funct3 = '010'           
+    opcode = '0100011'
 
-def i_type(input):
-    #to convert i type instruction to binary
-    pass
+    i = input.replace(",", " ").replace("(", " ").replace(")"," ").split()
+
+    rs2 = register(i[1])
+    offset = i[2]
+    rs1 = register(i[3])
+    
+    imm = twoscomplement(int(offset), 12) 
+    if imm == 'syntax error':
+        return imm
+    
+    return imm[:7]  + rs2 + rs1 + funct3 + imm[7:] + opcode
+
+def i_type(s):
+    #create a dictionary for register adresss in binary
+    
+    d = {
+        'addi': {'funct3': '000', 'opcode': '0010011'},
+        'lw':   {'funct3': '010', 'opcode': '0000011'},
+        'jalr': {'funct3': '000', 'opcode': '1100111'}
+    }
+    # create a dictionary for required codes for the instruction 
+    i = s.replace(",", " ").replace("(", " ").replace(")", " ")
+    l = i.split()
+    # to convert string to usable values 
+    ins = l[0]
+
+    if ins == "lw":
+        rd = l[1]
+        rs1 = l[3]
+        imm = int(l[2])
+    else:
+        rd = l[1]
+        rs1 = l[2]
+        imm = int(l[3])
+    # assigning the usable values to variables 
+
+    imm_bin = twoscomplement(imm,12)
+    if imm_bin == 'syntax error':
+        return imm_bin
+    instruction = imm_bin + register(rs1) + d[ins]['funct3'] + register(rd) + d[ins]['opcode']
+    #forming an instruction in binary using the corresponing binary values from the dictionary as per the instruction semantics given in pdf 
+    return(instruction)
 
 def b_type(input):
     #to convert n type instruction to binary
-    pass
+    opcode = '1100011'
+    i = input.replace(",", " ").split()
+    
+    inst = i[0]
+    rs1 = register(i[1])
+    rs2 = register(i[2])
+    label = i[3]
+    if inst == "beq":
+        funct3 = '000'
+    elif inst == "bne":
+        funct3 = '001'
+    elif inst=='blt':
+        funct3 = '100'
+
+    if label not in labels:
+        imm = twoscomplement((int(label)),12)
+    else:
+        imm = twoscomplement((labels[label] - curr) // 2, 12)
+
+    if imm == 'syntax error':
+        return imm
+    return imm[0] + imm[2:8] + rs2 + rs1 + funct3 + imm[8:12] + imm[1] + opcode
 
 def j_type(input):
     #to convert j type instruction to binary
@@ -115,8 +196,10 @@ def j_type(input):
         if dest in labels:
             imm = twoscomplement(labels[dest]-curr,20)
         else:
-            imm = twoscomplement(int(dest),20)
+            imm = twoscomplement(int(dest)-curr,20)
         
+        if imm == 'syntax error':
+            return imm
         return imm[-20]+imm[-11:-1]+imm[-12]+imm[-19:-11]+rd+opcode
 
 def bonus(input):
@@ -130,10 +213,10 @@ def decode(input):
         binary = r_type(input)
     except:
         try:
-            binary = s_type(input)
+            binary = i_type(input)
         except:
             try:
-                binary = i_type(input)
+                binary = s_type(input)
             except:
                 try:
                     binary = s_type(input)
@@ -147,12 +230,12 @@ def decode(input):
                             try:
                                 binary = bonus(input)
                             except:
-                                binary = "error : instruction does not match syntax for any instruction type\n"
+                                binary = "error : instruction does not match syntax for any instruction type"
     
-    return binary
+    return binary+'\n'
 
 def assembler(input_file, output_file):
-    
+    global curr
     #to read input file (assembly level instructions) and convert to 32 bit binary code
     with open(input_file,'r') as f:
         data = f.readlines()
@@ -162,23 +245,40 @@ def assembler(input_file, output_file):
             lines.append((addr,i))
             addr+=4
 
-        binarycode = ["shit\n"]
+        binarycode = []
+        if lines[-1][-1] not in ["beq zero,zero,0","beq zero,zero,0\n"]:
+            binarycode.append("syntax error a\n")
+
+        for i in lines:
+            curr = i[0]
+            k = i[1].split(':')
+            if len(k)>1:
+                labels[k[0]] = i[0]
+
         for i in lines:
             curr = i[0]
             try:
                 k = i[1].split(':')
                 if len(k)>1:
-                    labels[k[0]] = i[0]
                     j = decode(k[1].strip(' '))
                 else:
                     j = decode(k[0].strip(' '))
-                binarycode.append(j)
+                if 'invalid register' in j:
+                    binarycode.append("syntax error\n")
+                else:
+                    binarycode.append(j)
             except:
-                binarycode.append("error encountered\n")
+                binarycode.append("syntax error\n")
 
     print(binarycode)
     #to write the generated binary to output file
     with open(output_file,'w') as f:
-        f.writelines(binarycode)
-
-#assembler('a.txt','b.txt')
+        if 'syntax error\n' in binarycode:
+            f.write("syntax error\n")
+        else:
+            f.writelines(binarycode)
+            
+l = list('012456789')+['10']
+for i in l:
+    print("\n",i)
+    assembler('Ex_test_'+i+'.txt','Output_'+i+'.txt')
