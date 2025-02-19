@@ -117,8 +117,36 @@ def s_type(input):
     pass
 
 def i_type(input):
-    #to convert i type instruction to binary
-    pass
+       ##to convert i type instruction to binary
+    
+    d = {
+        'addi': {'funct3': '000', 'opcode': '0010011'},
+        'lw':   {'funct3': '010', 'opcode': '0000011'},
+        'jalr': {'funct3': '000', 'opcode': '1100111'}
+    }
+    # create a dictionary for required codes for the instruction 
+    i = s.replace(",", " ").replace("(", " ").replace(")", " ")
+    l = i.split()
+    # to convert string to usable values 
+    ins = l[0]
+
+    if ins == "lw":
+        rd = l[1]
+        rs1 = l[3]
+        imm = int(l[2])
+    else:
+        rd = l[1]
+        rs1 = l[2]
+        imm = int(l[3])
+    # assigning the usable values to variables 
+
+    imm_bin = twoscomplement(imm,12)
+    if imm_bin == 'syntax error':
+        return imm_bin
+    instruction = imm_bin + register(rs1) + d[ins]['funct3'] + register(rd) + d[ins]['opcode']
+    #forming an instruction in binary using the corresponing binary values from the dictionary as per the instruction semantics given in pdf 
+    return(instruction)
+
 
 def b_type(input):
     #to convert n type instruction to binary
