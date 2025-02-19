@@ -14,7 +14,6 @@ def binary(num):
 
 def sext(num,n):
     if len(num) > n:
-        print("chi thu")
         return "syntax error"
     else:
         while len(num) < n:
