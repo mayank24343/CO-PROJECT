@@ -10,7 +10,7 @@ def binary(num):
         num = num//2
 
     b = b[::-1]
-    return b
+    return '0'+b
 
 def sext(num,n):
     if len(num) > n:
@@ -234,7 +234,7 @@ def decode(input):
     return binary
 
 def assembler(input_file, output_file):
-    
+    global curr
     #to read input file (assembly level instructions) and convert to 32 bit binary code
     with open(input_file,'r') as f:
         data = f.readlines()
@@ -244,23 +244,35 @@ def assembler(input_file, output_file):
             lines.append((addr,i))
             addr+=4
 
-        binarycode = ["shit\n"]
+        binarycode = []
+        print(lines[-1][-1])
+        if lines[-1][-1] not in ["beq zero,zero,0\n","beq zero,zero,0"]:
+            binarycode.append("syntax error\n")
+
+        for i in lines:
+            curr = i[0]
+            k = i[1].split(':')
+            if len(k)>1:
+                labels[k[0]] = i[0]
+
         for i in lines:
             curr = i[0]
             try:
                 k = i[1].split(':')
                 if len(k)>1:
-                    labels[k[0]] = i[0]
                     j = decode(k[1].strip(' '))
                 else:
                     j = decode(k[0].strip(' '))
-                binarycode.append(j)
+                if 'invalid register' in j:
+                    binarycode.append("syntax error\n")
+                else:
+                    binarycode.append(j)
             except:
-                binarycode.append("error encountered\n")
+                binarycode.append("syntax error\n")
 
-    print(binarycode)
     #to write the generated binary to output file
     with open(output_file,'w') as f:
-        f.writelines(binarycode)
-
-#assembler('a.txt','b.txt')
+        if 'syntax error\n' in binarycode:
+            f.write("syntax error\n")
+        else:
+            f.writelines(binarycode)
