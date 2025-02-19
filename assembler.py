@@ -90,7 +90,27 @@ def register(reg):
 
 def r_type(input):
     #to convert r type instruction to binary
-    pass
+    d = {
+    'add': {'f7': '0000000', 'f3': '000', 'opcode': '0110011'},
+    'sub': {'f7': '0100000', 'f3': '000', 'opcode': '0110011'},
+    'slt': {'f7': '0000000', 'f3': '010', 'opcode': '0110011'},
+    'srl': {'f7': '0000000', 'f3': '101', 'opcode': '0110011'},
+    'or': {'f7': '0000000', 'f3': '110', 'opcode': '0110011'},
+    'and': {'f7': '0000000', 'f3': '111', 'opcode': '0110011'}
+    }
+    # create a dictionary for required codes for the instruction 
+    l = input.split()
+    l2 = l[1].split(',')
+    # to convert string to usable values 
+    ins = l[0]
+    rd = l2[0]
+    rs1 = l2[1]
+    rs2 = l2[2]
+    # assigning the usable values to variables 
+
+    instruction = d[ins]['f7']+register(rs2)+register(rs1)+d[ins]['f3']+register(rd)+d[ins]['opcode']
+    #forming an instruction in binary using the corresponing binary values from the dictionary as per the instruction semantics given in pdf 
+    return instruction
 
 def s_type(input):
     #to convert s type instruction to binary
