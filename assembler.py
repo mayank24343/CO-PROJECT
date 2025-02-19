@@ -277,8 +277,3 @@ def assembler(input_file, output_file):
             f.write("syntax error\n")
         else:
             f.writelines(binarycode)
-            
-l = list('012456789')+['10']
-for i in l:
-    print("\n",i)
-    assembler('Ex_test_'+i+'.txt','Output_'+i+'.txt')
