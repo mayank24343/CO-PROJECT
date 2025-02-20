@@ -194,13 +194,13 @@ def j_type(input):
         rd = register(input[0])
         dest = input[1]
         if dest in labels:
-            imm = twoscomplement(labels[dest]-curr,20)
+            imm = twoscomplement(labels[dest]-curr,21)
         else:
-            imm = twoscomplement(int(dest)-curr,20)
+            imm = twoscomplement(int(dest)-curr,21)
         
         if imm == 'syntax error':
             return imm
-        return imm[-20]+imm[-11:-1]+imm[-12]+imm[-19:-11]+rd+opcode
+        return imm[-21]+imm[-11:-1]+imm[-12]+imm[-20:-12]+rd+opcode
 
 def bonus(input):
     #to convert reset and halt instruction to binary
