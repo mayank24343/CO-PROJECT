@@ -64,6 +64,24 @@ def binary_to_decimal(num):
     else:
         return dec
 
+def decimal_to_hex(num):
+    hex = ''
+    d = {0:'0',1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'A',11:'B',12:'C',13:'D',14:'E',15:'F'}
+    while num>0:
+        hex+= d[num%16]
+        num//= 16
+
+    hex = hex[::-1]
+    return hex
+
+def binary_to_hex(b):
+    hex = ''
+    d = {0:'0',1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'A',11:'B',12:'C',13:'D',14:'E',15:'F'}
+    groups = [b[i:i+4] for i in range(0,len(b),4)]
+    for i in groups:
+        hex+= d[binary_to_decimal('0'+i)]
+    return hex
+
 #initialising pc counter to zero
 PC = 0
 
@@ -170,7 +188,18 @@ def jalr(instruction):
 
 #s type 
 def s_type(instruction):
-    pass
+    global data_memory
+    global PC
+
+    rs2 = instruction[7:12]
+    rs1 = instruction[12:17]
+    funct3 = instruction[17:20]
+    imm4_0 = instruction[20:25]
+    imm11_5 = instruction[0:7]
+
+    num = imm11_5+imm4_0
+    data_memory['0x'+binary_to_hex(twoscomplement(registers[rs1]+binary_to_decimal(num),32))] = registers[rs2]
+    return 4
 
 # b type 
 def b_type(instruction):
