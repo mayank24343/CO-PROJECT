@@ -2,6 +2,27 @@ import sys
 
 #useful functions 
 #write the functions i've used here according to whatt i explained each function does, some are similar to that of assembler
+def twoscomplement(num,len):
+    if num >= 0:
+        tc = binary(num)
+    else:
+        b = binary(-num)
+        tc = ''
+        flag = 0
+        for i in b[::-1]:
+            if flag:
+                if i == "0":
+                    tc+="1"
+                else:
+                    tc+="0"
+            else:
+                tc += i
+            if i == "1":
+                flag = 1
+        tc = tc[::-1]
+        tc = "1"+tc
+    tc = sext(tc,len)
+    return tc 
 
 #initialising pc counter to zero
 PC = 0
@@ -32,7 +53,32 @@ opcode = {
 
 #rtype 
 def r_type(instruction):
-    pass
+    global registers
+    global PC
+
+    rs2 = instruction[7:12]
+    rs1 = instruction[12:17]
+    funct3 = instruction[17:20]
+    rd = instruction[20:25]
+    funct7 = instruction[0:7]
+    if funct3 == '000':
+        if funct7 == '0000000':
+            registers[rd] = registers[rs1] + registers[rs2]  #add
+        elif funct7 == '0100000':
+            registers[rd] = registers[rs1] - registers[rs2]  #sub
+    elif funct3 == '010':
+        if registers[rs1] < registers[rs2]:  
+            registers[rd] = 1  #slt
+        else:
+            registers[rd] = 0
+    elif funct3 == '101':
+        registers[rd] = registers[rs1] >> binary_to_decimal(sext(binary(registers[rs2]), 5))  #srl
+    elif funct3 == '110':
+        registers[rd] = registers[rs1] | registers[rs2]  #or
+    elif funct3 == '111':
+        registers[rd] = registers[rs1] & registers[rs2] #and
+
+    return 4
 
 #i type
 def lw(instruction):
