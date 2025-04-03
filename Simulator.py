@@ -1,6 +1,24 @@
 import sys
 
 #useful functions 
+def binary(num):
+    b = ''
+    if num == 0:
+        return '0'
+    while num>0:
+        b+=str(num%2)
+        num = num//2
+
+    b = b[::-1]
+    return '0'+b
+
+def sext(num,n):
+    while len(num) < n:
+        num = num[0]+num
+    while len(num) > n:
+        num = num[1:]
+
+    return num
 #write the functions i've used here according to whatt i explained each function does, some are similar to that of assembler
 def twoscomplement(num,len):
     if num >= 0:
@@ -96,11 +114,45 @@ def s_type(instruction):
 
 # b type 
 def b_type(instruction):
-    pass
+    global registers
+    global data_memory
+    global PC 
+
+    rs2 = instruction[7:12]
+    rs1 = instruction[12:17]
+    funct3 = instruction[17:20]
+    
+    imm = instruction[0] + instruction[24] + instruction[1:7] + instruction[20:24] + '0'
+    imm = binary_to_decimal(imm)  
+
+    if funct3 == '000':  # beq
+        if registers[rs1] == registers[rs2] and imm != 0:
+            return imm
+        elif registers[rs1] == registers[rs2] and imm == 0 and rs1==rs2 and rs2 == '00000':
+            return "halt"
+        else:
+            return 4
+    elif funct3 == '001':  # bne
+        if registers[rs1] != registers[rs2]:
+            return imm
+        else:
+            return 4
+    else:
+        return 4
 
 #j type 
 def j_type(instruction):
-    pass
+    global registers
+    global PC
+
+    rd = instruction[20:25]
+    
+    imm = instruction[0] + instruction[12:20] + instruction[11] + instruction[1:11] + '0'
+    imm = binary_to_decimal(sext(imm, 21))
+
+    registers[rd] = PC + 4
+
+    return imm
 
 def simulator(input_file,output_file):
     global PC
