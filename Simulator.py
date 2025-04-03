@@ -42,6 +42,28 @@ def twoscomplement(num,len):
     tc = sext(tc,len)
     return tc 
 
+def binary_to_decimal(num):
+    flag = False
+    if num[0] == '1':
+        newnum = ''
+        for i in num:
+            if i=='0':
+                newnum+='1'
+            else:
+                newnum+='0'
+        flag = True
+        num = newnum
+
+    num = num[::-1]
+    dec = 0
+    for i in range(len(num)):
+            dec+= (2**i)*int(num[i])
+    
+    if flag:
+        return -(dec+1)
+    else:
+        return dec
+
 #initialising pc counter to zero
 PC = 0
 
@@ -100,13 +122,51 @@ def r_type(instruction):
 
 #i type
 def lw(instruction):
-    pass
+    global registers
+    global data_memory
+    global PC 
+
+    rs1 = instruction[12:17]
+    funct3 = instruction[17:20]
+    rd = instruction[20:25]
+    imm = instruction[0:12]
+
+    if funct3 == '010':
+        registers[rd] = data_memory.setdefault('0x'+binary_to_hex(twoscomplement(registers[rs1]+binary_to_decimal(imm),32)),0)
+        pass
+
+    return 4 
 
 def addi(instruction):
-    pass
+    global registers
+    global data_memory
+    global PC 
+
+    rs = instruction[12:17]
+    funct3 = instruction[17:20]
+    rd = instruction[20:25]
+    imm = instruction[0:12]
+
+    if funct3 == '000':
+        registers[rd] = registers[rs]+binary_to_decimal(imm)
+
+    return 4
 
 def jalr(instruction):
-    pass
+    global registers
+    global data_memory
+    global PC 
+
+    rs = instruction[12:17]
+    funct3 = instruction[17:20]
+    rd = instruction[20:25]
+    imm = instruction[0:12]
+
+    if funct3 == '000':
+        final_address = (registers[rs] + binary_to_decimal(imm))
+        registers[rd] = PC + 4
+        
+        return final_address-PC
 
 #s type 
 def s_type(instruction):
